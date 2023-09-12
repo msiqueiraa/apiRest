@@ -17,47 +17,56 @@ import java.util.UUID;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.ResponseEntity.status;
 
 @Service
 public class ProductService {
     @Autowired
     ProductRepository productRepository;
-    public ResponseEntity<ProductModel> saveProduct(ProductRecordDto productRecordDto){
+
+    public ProductModel saveProduct(ProductRecordDto productRecordDto) {
         var productModel = new ProductModel();
         BeanUtils.copyProperties(productRecordDto, productModel);
-        return ResponseEntity.status(HttpStatus.CREATED).body(productRepository.save(productModel));
+        productRepository.save(productModel);
+        return productModel;
     }
-    public ResponseEntity<List<ProductModel>>getAllProducts(){
+
+    public List<ProductModel> getAllProducts() {
         List<ProductModel> productsList = productRepository.findAll();
-        if(!productsList.isEmpty()){
-            for(ProductModel product : productsList){
+        if (!productsList.isEmpty()) {
+            for (ProductModel product : productsList) {
                 product.add(linkTo(methodOn(ProductController.class).getOneProduct(product.getIdProduct())).withSelfRel());
             }
         }
-        return ResponseEntity.status(HttpStatus.OK).body(productsList);
+        return productsList;
     }
 
-    public ResponseEntity<Object> getOneProduct(UUID id) {
-        Optional<ProductModel> productSelect = productRepository.findById(id);
-        if(productSelect.isEmpty()){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found.");
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(productSelect.get());
-    }
-    public ResponseEntity<Object> updateProduct(UUID id, ProductRecordDto productRecordDto){ Optional<ProductModel> productSelect = productRepository.findById(id);
-        if(productSelect.isEmpty()){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found");
-        }
-        var productModel = productSelect.get();
-        BeanUtils.copyProperties(productRecordDto,productModel);
-        return ResponseEntity.status(HttpStatus.OK).body(productRepository.save(productModel));
-    }
-    public ResponseEntity<Object> deleteProduct(UUID id){
+    public Object getOneProduct(UUID id) {
         Optional<ProductModel> productSelect = productRepository.findById(id);
         if (productSelect.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found");
+            return status(NOT_FOUND).body("Product not found.");
+        }
+        return productSelect.get();
+    }
+
+    public Object updateProduct(UUID id, ProductRecordDto productRecordDto) {
+        Optional<ProductModel> productSelect = productRepository.findById(id);
+        if (productSelect.isEmpty()) {
+            return status(NOT_FOUND).body("Product not found");
+        }
+        var productModel = productSelect.get();
+        BeanUtils.copyProperties(productRecordDto, productModel);
+        productRepository.save(productModel);
+        return productModel;
+    }
+
+    public Object deleteProduct(UUID id) {
+        Optional<ProductModel> productSelect = productRepository.findById(id);
+        if (productSelect.isEmpty()) {
+            return status(NOT_FOUND).body("Product not found");
         }
         productRepository.delete(productSelect.get());
-        return ResponseEntity.status(HttpStatus.OK).body("Product deleted successfully");
+        return productSelect;
     }
 }
