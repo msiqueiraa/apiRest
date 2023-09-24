@@ -20,8 +20,14 @@ import static org.springframework.http.ResponseEntity.status;
 
 @Service
 public class ProductService {
+    private final ProductRepository productRepository;
+    private final ProductController productController;
+
     @Autowired
-    ProductRepository productRepository;
+    public ProductService(ProductRepository productRepository, ProductController productController) {
+        this.productRepository = productRepository;
+        this.productController = productController;
+    }
 
     public ProductModel saveProduct(ProductRecordDto productRecordDto) {
         var productModel = new ProductModel();
